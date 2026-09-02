@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Electrical Cable Selector v6 - LV & MV up to 22 kV</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#fff; --text:#152033; --muted:#667085; --line:#d9e1ec;
+  --primary:#1769e0; --primary2:#0d4fae; --ok:#067647; --warn:#b54708; --bad:#b42318;
+  --input:#f9fbfd; --shadow:0 8px 30px rgba(27,47,94,.08); --r:16px;
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:18px}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+h1{font-size:24px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px;line-height:1.45}.badge{background:#eaf2ff;color:#175cd3;border:1px solid #c7d7fe;padding:7px 10px;border-radius:999px;font-size:12px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.title{font-weight:800;font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.field label{font-size:12px;font-weight:700;display:block;margin-bottom:6px}.field small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+input,select{width:100%;border:1px solid #cfd8e6;background:var(--input);color:var(--text);border-radius:10px;padding:11px 10px;font-size:14px;outline:none}
+input:focus,select:focus{border-color:#6aa0ee;box-shadow:0 0 0 3px rgba(23,105,224,.1)}.mode{display:flex;gap:7px;margin-bottom:12px}
+.mode button,.btn{border:1px solid #cfd8e6;background:#fff;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;color:#344054}
+.mode button.active,.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn.primary:hover{background:var(--primary2)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.btn{font-size:13px}.btn.ghost{background:#fff}.full{grid-column:1/-1}
+.resultHero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.hero{border:1px solid var(--line);border-radius:14px;padding:14px;background:linear-gradient(180deg,#fff,#f8fbff)}
+.hero .k{font-size:11px;color:var(--muted);font-weight:700}.hero .v{font-size:29px;font-weight:900;margin-top:3px}.hero .u{font-size:12px;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.metric{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:76px}
+.metric .k{font-size:10px;color:var(--muted);font-weight:700}.metric .v{font-size:17px;font-weight:800;margin-top:5px}.status{font-size:11px;margin-top:4px;font-weight:800}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.bar{height:8px;background:#edf1f6;border-radius:99px;overflow:hidden;margin-top:7px}.bar>i{display:block;height:100%;background:var(--primary);border-radius:99px;width:0}
+.summary{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden}.row{display:grid;grid-template-columns:1.25fr 1fr;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}.row div{padding:9px 10px;font-size:12px}.row div:first-child{background:#f8fafc;color:#475467;font-weight:700}.row div:last-child{font-weight:700}
+.visual{display:flex;align-items:center;justify-content:center;gap:25px;min-height:150px;border:1px dashed #cfd8e6;border-radius:14px;margin-top:12px;background:#fbfcfe;padding:15px}
+.circleBox{text-align:center}.circle{margin:auto;border:3px solid #667085;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;background:#fff;transition:.2s}
+.circle.cable{border-width:7px;border-color:#344054}
+.cableCross{position:relative;width:120px;height:120px;border-radius:50%;border:8px solid #344054;background:#eef2f6;box-shadow:inset 0 0 0 2px #98a2b3;transition:.2s}
+.cableCore{position:absolute;border-radius:50%;border:2px solid #667085;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#101828;transform:translate(-50%,-50%);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.core-L1{background:#f2f4f7}.core-L2{background:#e4e7ec}.core-L3{background:#d0d5dd}.core-N{background:#eaecf0}.core-PE{background:repeating-linear-gradient(45deg,#f2f4f7 0 5px,#d0d5dd 5px 10px)}
+.legend{font-size:11px;color:var(--muted);margin-top:7px}.note{font-size:11px;line-height:1.5;color:var(--muted);margin-top:10px}
+.tablewrap{overflow:auto;margin-top:12px}table{border-collapse:collapse;width:100%;font-size:11px;min-width:640px}th,td{border:1px solid var(--line);padding:8px;text-align:center}th{background:#f2f6fb}.selected{background:#eaf2ff;font-weight:800}
+.sep{height:1px;background:var(--line);margin:14px 0}.hidden{display:none!important}
+.checkline{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:#f8fafc;border-radius:10px;padding:9px 10px}.checkline input{width:auto;margin:0}.checkline label{font-size:12px;font-weight:700;margin:0}.pill{display:inline-block;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:800;background:#eef2f6}.pill.ok{background:#ecfdf3}.pill.bad{background:#fef3f2}.pill.warn{background:#fffaeb}
+footer{font-size:10px;color:var(--muted);margin:14px 0 4px;line-height:1.45}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.wrap{padding:10px}.head{display:block}.badge{display:inline-block;margin-top:8px}.formgrid{grid-template-columns:1fr}.resultHero{grid-template-columns:1fr 1fr}.hero .v{font-size:24px}.metrics{grid-template-columns:1fr 1fr}.card{padding:13px}.visual{gap:14px}}
+@media print{body{background:#fff}.actions,.mode{display:none!important}.wrap{max-width:none;padding:0}.card{box-shadow:none;break-inside:avoid}.grid{grid-template-columns:1fr 1fr}footer{font-size:9px}}
+</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1769e0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cable Selector">
+<link rel="apple-touch-icon" href="./icon-192.png">
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Electrical Cable Selector v6</h1>
+      <div class="sub">Chọn cáp LV và MV đến 22 kV: dòng tải, ampacity, sụt áp, ngắn mạch, screen và cấu hình lắp đặt.</div>
+    </div>
+    <div class="badge">v6 • LV + MV ≤ 22 kV</div>
+  </div>
+
+  <div class="mode" style="margin:8px 0 14px"><button id="sysLV" class="active" onclick="setSystemMode('lv')">LV ≤ 1 kV</button><button id="sysMV" onclick="setSystemMode('mv')">MV 3.3–22 kV</button></div>
+
+  <section id="mvArea" class="hidden">
+    <div class="grid">
+      <section class="card">
+        <div class="title">① Thông số hệ thống MV</div>
+        <div class="formgrid">
+          <div class="field"><label>Điện áp hệ thống</label><select id="mvVoltage" onchange="syncMVVoltage()"><option value="3300">3.3 kV</option><option value="6600">6.6 kV</option><option value="11000" selected>11 kV</option><option value="22000">22 kV</option></select></div>
+          <div class="field"><label>Voltage designation U0/U (Um)</label><select id="mvClass"><option value="1.9/3.3(3.6)">1.9/3.3(3.6) kV</option><option value="3.8/6.6(7.2)">3.8/6.6(7.2) kV</option><option value="6.35/11(12)">6.35/11(12) kV</option><option value="12.7/22(24)" selected>12.7/22(24) kV</option></select></div>
+          <div class="field"><label>Công suất tải</label><input id="mvPower" type="number" value="1000" min="0" step="10"><small>kW</small></div>
+          <div class="field"><label>cos φ</label><input id="mvPf" type="number" value="0.9" min="0.1" max="1" step="0.01"></div>
+          <div class="field"><label>Chiều dài tuyến</label><input id="mvLength" type="number" value="500" min="0"><small>m, một chiều</small></div>
+          <div class="field"><label>Dự phòng tải</label><input id="mvReserve" type="number" value="1.15" min="1" step="0.05"></div>
+        </div>
+        <div class="sep"></div>
+        <div class="title">② Cấu tạo & lắp đặt MV</div>
+        <div class="formgrid">
+          <div class="field"><label>Vật liệu conductor</label><select id="mvMaterial"><option value="cu">Copper (Cu)</option><option value="al">Aluminium (Al)</option></select></div>
+          <div class="field"><label>Cách điện</label><select id="mvIns"><option value="xlpe" selected>XLPE 90°C</option></select></div>
+          <div class="field"><label>Cấu hình cáp</label><select id="mvCores"><option value="1" selected>3 × 1C</option><option value="3">3C</option></select><small>MV thực tế thường dùng 3 × 1C.</small></div>
+          <div class="field"><label>Kiểu lắp đặt</label><select id="mvInstall"><option value="air">Trong không khí / tray</option><option value="duct">Trong duct</option><option value="buried" selected>Chôn trực tiếp</option></select></div>
+          <div class="field"><label>Arrangement 1C</label><select id="mvArrangement"><option value="trefoil" selected>Trefoil</option><option value="flat">Flat formation</option></select></div>
+          <div class="field"><label>Hệ số derating tổng K</label><input id="mvK" type="number" value="1.00" min="0.1" max="1.5" step="0.01"><small>Nhiệt độ đất/không khí, thermal resistivity, grouping...</small></div>
+          <div class="field"><label>Screen Cu</label><select id="mvScreen"><option value="16">16 mm²</option><option value="25" selected>25 mm²</option><option value="35">35 mm²</option><option value="50">50 mm²</option><option value="70">70 mm²</option><option value="95">95 mm²</option></select></div>
+          <div class="field"><label>Screen bonding</label><select id="mvBonding"><option value="both" selected>Both-end bonding</option><option value="single">Single-point bonding</option><option value="cross">Cross-bonding</option></select></div>
+          <div class="field"><label>Isc 3 pha</label><input id="mvFault" type="number" value="20" min="0" step="0.1"><small>kA rms</small></div>
+          <div class="field"><label>Thời gian cắt</label><input id="mvFaultTime" type="number" value="1" min="0.01" step="0.05"><small>s</small></div>
+          <div class="field"><label>Sụt áp cho phép</label><input id="mvVDLimit" type="number" value="3" min="0.1" step="0.1"><small>%</small></div>
+          <div class="field"><label>Số mạch song song / pha</label><input id="mvParallel" type="number" value="1" min="1" max="6"></div>
+        </div>
+        <div class="actions"><button class="btn primary" onclick="calcMV()">Tính chọn cáp MV</button><button class="btn" onclick="resetMV()">Reset MV</button></div>
+      </section>
+      <section class="card">
+        <div class="title">③ Kết quả MV</div>
+        <div class="resultHero"><div class="hero"><div class="k">CÁP ĐỀ XUẤT</div><div class="v" id="mvRSize">—</div><div class="u" id="mvRConfig">mm²</div></div><div class="hero"><div class="k">DÒNG THIẾT KẾ</div><div class="v" id="mvRCurrent">—</div><div class="u">A</div></div></div>
+        <div class="metrics"><div class="metric"><div class="k">AMPACITY</div><div class="v" id="mvRAmp">—</div><div class="status" id="mvSAmp">—</div></div><div class="metric"><div class="k">VOLTAGE DROP</div><div class="v" id="mvRVD">—</div><div class="status" id="mvSVD">—</div></div><div class="metric"><div class="k">SC CONDUCTOR</div><div class="v" id="mvRSC">—</div><div class="status" id="mvSSC">—</div></div><div class="metric"><div class="k">SCREEN SC</div><div class="v" id="mvRScreen">—</div><div class="status" id="mvSScreen">—</div></div><div class="metric"><div class="k">CABLE CLASS</div><div class="v" id="mvRClass" style="font-size:14px">—</div></div><div class="metric"><div class="k">BONDING</div><div class="v" id="mvRBond" style="font-size:14px">—</div></div></div>
+        <div class="summary"><div class="row"><div>Ký hiệu sơ bộ</div><div id="mvDesignation">—</div></div><div class="row"><div>Smin ngắn mạch conductor</div><div id="mvSmin">—</div></div><div class="row"><div>Smin screen (ước tính adiabatic)</div><div id="mvScreenMin">—</div></div><div class="row"><div>Ghi chú</div><div id="mvNote">—</div></div></div>
+        <div class="note">MV mode dùng dữ liệu ampacity tham khảo để sàng lọc sơ bộ. Thiết kế phát hành phải đối chiếu catalogue đúng hãng/cấu tạo, điều kiện đất, khoảng cách cáp, bonding và IEC 60502-2/IEC 60287.</div>
+      </section>
+    </div>
+  </section>
+
+  <div id="lvArea" class="grid">
+    <section class="card">
+      <div class="title">① Thông số tải</div>
+      <div class="mode">
+        <button id="mPower" class="active" onclick="setMode('power')">Nhập công suất</button>
+        <button id="mCurrent" onclick="setMode('current')">Nhập dòng</button>
+      </div>
+      <div class="formgrid">
+        <div class="field">
+          <label>Loại tải</label>
+          <select id="loadType" onchange="syncLoadType()">
+            <option value="heater" selected>Heater / tải thuần trở</option>
+            <option value="motor">Motor</option>
+            <option value="general">General load</option>
+            <option value="vfd">VFD / UPS / electronic load</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field" id="powerField">
+          <label>Công suất tải</label>
+          <input id="power" type="number" value="22.5" min="0" step="0.1">
+          <small>kW</small>
+        </div>
+        <div class="field" id="powerTypeField">
+          <label>Loại công suất</label>
+          <select id="powerType">
+            <option value="input" selected>Input electrical power</option>
+            <option value="output">Motor output / shaft power</option>
+          </select>
+          <small>Chỉ chia cho η khi công suất là output của motor.</small>
+        </div>
+        <div class="field hidden" id="currentField">
+          <label>Dòng tải</label>
+          <input id="current" type="number" value="40" min="0" step="0.1">
+          <small>A</small>
+        </div>
+        <div class="field">
+          <label>Hệ thống</label>
+          <select id="phase">
+            <option value="3">3 pha AC</option>
+            <option value="1">1 pha AC</option>
+            <option value="dc">DC</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Điện áp</label>
+          <input id="voltage" type="number" value="400" min="1">
+          <small>V</small>
+        </div>
+        <div class="field">
+          <label>cos φ</label>
+          <input id="pf" type="number" value="1.00" min="0.1" max="1" step="0.01">
+          <small id="pfHint">Heater thuần trở: cosφ ≈ 1.00</small>
+        </div>
+        <div class="field">
+          <label>Hiệu suất η</label>
+          <input id="eff" type="number" value="1.00" min="0.1" max="1" step="0.01">
+          <small id="effHint">Không áp dụng khi nhập công suất điện đầu vào.</small>
+        </div>
+        <div class="field">
+          <label>Hệ số dự phòng tải</label>
+          <input id="reserve" type="number" value="1.25" min="1" step="0.05">
+          <small>I thiết kế = I tải × hệ số</small>
+        </div>
+        <div class="field">
+          <label>Chiều dài tuyến</label>
+          <input id="length" type="number" value="50" min="0" step="1">
+          <small>m, tính một chiều</small>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+      <div class="title">② Điều kiện lắp đặt</div>
+      <div class="formgrid">
+        <div class="field">
+          <label>Vật liệu lõi</label>
+          <select id="material">
+            <option value="cu">Copper (Cu)</option>
+            <option value="al">Aluminium (Al)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Loại cách điện</label>
+          <select id="insulation">
+            <option value="xlpe">XLPE / 90°C</option>
+            <option value="pvc">PVC / 70°C</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Kiểu lắp đặt nhanh</label>
+          <select id="install">
+            <option value="tray">Trên máng / không khí</option>
+            <option value="conduit">Trong ống / trunking</option>
+            <option value="buried">Chôn đất / underground</option>
+          </select>
+          <small>Bảng ampacity trong app là giá trị tham khảo nhanh.</small>
+        </div>
+        <div class="field">
+          <label>Số lõi vật lý của cáp</label>
+          <select id="cores">
+            <option value="1">1C</option>
+            <option value="2">2C</option>
+            <option value="3">3C</option>
+            <option value="4" selected>4C</option>
+            <option value="5">5C</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cấu hình hệ thống</label>
+          <select id="systemConfig" onchange="syncLoaded()">
+            <option value="LN">L + N</option>
+            <option value="3P">3P</option>
+            <option value="3PPE" selected>3P + PE</option>
+            <option value="3PN">3P + N</option>
+            <option value="3PNPE">3P + N + PE</option>
+            <option value="custom">Tùy chọn</option>
+          </select>
+          <small>PE không được tính là lõi mang dòng bình thường.</small>
+        </div>
+        <div class="field">
+          <label>Số lõi mang dòng (loaded conductors)</label>
+          <select id="loaded">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+          <small>Dùng để hiệu chỉnh khả năng tải nhiệt; không phụ thuộc đơn thuần vào số lõi vật lý.</small>
+        </div>
+        <div class="field">
+          <label>Hệ số nhiệt độ Kt</label>
+          <input id="kt" type="number" value="1.00" min="0.1" max="1.5" step="0.01">
+        </div>
+        <div class="field">
+          <label>Hệ số gom cáp Kg</label>
+          <input id="kg" type="number" value="1.00" min="0.1" max="1.5" step="0.01">
+        </div>
+        <div class="field">
+          <label>Sụt áp cho phép</label>
+          <input id="vdLimit" type="number" value="3" min="0.1" max="20" step="0.1">
+          <small>%</small>
+        </div>
+        <div class="field">
+          <label>Ø ngoài catalogue (tuỳ chọn)</label>
+          <input id="actualOD" type="number" placeholder="Ví dụ 22.5" min="0" step="0.1">
+          <small>mm — nếu có sẽ ưu tiên dùng để tính</small>
+        </div>
+        <div class="field">
+          <label>Khối lượng catalogue (tuỳ chọn)</label>
+          <input id="actualWeight" type="number" placeholder="Ví dụ 1.15" min="0" step="0.01">
+          <small>kg/m</small>
+        </div>
+        <div class="field">
+          <label>Số tuyến cáp song song / pha</label>
+          <input id="parallel" type="number" value="1" min="1" max="12" step="1">
+          <small>Bỏ Auto nếu muốn cố định số tuyến.</small>
+        </div>
+        <div class="field">
+          <label>Tự động chọn số tuyến song song</label>
+          <div class="checkline"><input id="autoParallel" type="checkbox" checked><label for="autoParallel">Auto 1 → 12 tuyến / pha</label></div>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+      <div class="title">③ Kiểm tra bảo vệ & motor</div>
+      <div class="formgrid">
+        <div class="field">
+          <label>Dòng ngắn mạch tại điểm lắp</label>
+          <input id="faultKA" type="number" value="0" placeholder="Ví dụ 10" min="0" step="0.1">
+          <small>kA RMS — nhập 0 để bỏ qua kiểm tra.</small>
+        </div>
+        <div class="field">
+          <label>Thời gian cắt bảo vệ</label>
+          <input id="faultTime" type="number" value="0.2" min="0.01" step="0.01">
+          <small>s — dùng công thức adiabatic S ≥ I√t/k.</small>
+        </div>
+        <div class="field" id="motorStartField">
+          <label>Phương pháp khởi động</label>
+          <select id="startMethod" onchange="syncStartMethod()">
+            <option value="dol">DOL / Direct-on-line</option>
+            <option value="star">Star-Delta</option>
+            <option value="soft">Soft starter</option>
+            <option value="vfd">VFD</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field" id="startMultField">
+          <label>Hệ số dòng khởi động</label>
+          <input id="startMult" type="number" value="6" min="1" step="0.1">
+          <small>Istart = Iload × hệ số.</small>
+        </div>
+        <div class="field" id="startVDField">
+          <label>Sụt áp khởi động cho phép</label>
+          <input id="startVDLimit" type="number" value="15" min="1" max="50" step="1">
+          <small>% — chỉ dùng khi Load type = Motor.</small>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" onclick="calc()">Tính & chọn cáp</button>
+        <button class="btn ghost" onclick="window.print()">In / PDF</button>
+        <button class="btn ghost" onclick="resetApp()">Reset</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title">④ Kết quả đề xuất</div>
+      <div class="resultHero">
+        <div class="hero">
+          <div class="k">CÁP ĐỀ XUẤT</div>
+          <div class="v" id="rSize">—</div>
+          <div class="u" id="rCableText">mm²</div>
+        </div>
+        <div class="hero">
+          <div class="k">DÒNG THIẾT KẾ</div>
+          <div class="v" id="rDesignI">—</div>
+          <div class="u">A</div>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><div class="k">Dòng tải</div><div class="v" id="rLoadI">— A</div></div>
+        <div class="metric"><div class="k">Cơ sở tính công suất</div><div class="v" id="rPowerBasis" style="font-size:13px">—</div></div>
+        <div class="metric"><div class="k">Ampacity hiệu chỉnh</div><div class="v" id="rAmp">— A</div><div class="status" id="sAmp"></div></div>
+        <div class="metric"><div class="k">Sụt áp</div><div class="v" id="rVD">— %</div><div class="status" id="sVD"></div></div>
+        <div class="metric"><div class="k">Ø lõi tương đương</div><div class="v" id="rCoreD">— mm</div></div>
+        <div class="metric"><div class="k">Ø ngoài ước tính</div><div class="v" id="rOD">— mm</div><div class="status warn">Tham khảo</div></div>
+        <div class="metric"><div class="k">Khối lượng tuyến</div><div class="v" id="rWeight">— kg</div></div>
+        <div class="metric"><div class="k">Ngắn mạch adiabatic</div><div class="v" id="rSC">—</div><div class="status" id="sSC"></div></div>
+        <div class="metric"><div class="k">Sụt áp khởi động</div><div class="v" id="rStartVD">—</div><div class="status" id="sStartVD"></div></div>
+      </div>
+
+      <div class="visual">
+        <div class="circleBox">
+          <div class="circle" id="coreCircle">Core</div>
+          <div class="legend">Lõi dẫn tương đương</div>
+        </div>
+        <div class="circleBox">
+          <div id="cableCross" class="cableCross"></div>
+          <div class="legend">Mặt cắt cáp hoàn chỉnh</div>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="row"><div>Cấu hình cáp</div><div id="sumConfig">—</div></div>
+        <div class="row"><div>Mật độ dòng trên lõi</div><div id="sumDensity">—</div></div>
+        <div class="row"><div>Điện trở DC tham khảo</div><div id="sumR">—</div></div>
+        <div class="row"><div>Tổn hao I²R tuyến</div><div id="sumLoss">—</div></div>
+        <div class="row"><div>Diện tích chiếm máng xấp xỉ</div><div id="sumTray">—</div></div>
+        <div class="row"><div>Ký hiệu cáp đề xuất</div><div id="sumDesignation">—</div></div>
+        <div class="row"><div>CB đề xuất AT / AF</div><div id="sumCB">—</div></div>
+        <div class="row"><div>Icu tối thiểu gợi ý</div><div id="sumIcu">—</div></div>
+      </div>
+      <div class="note" id="note">Nhấn “Tính & chọn cáp”.</div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px">
+    <div class="title">⑤ Bảng so sánh tiết diện gần nhất</div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Phương án</th><th>Ø lõi eq.</th><th>Ampacity/cáp</th><th>Dòng/cáp</th><th>Sụt áp</th><th>SC</th><th>Start VD</th><th>Đánh giá</th></tr></thead>
+        <tbody id="compareBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    V5 bổ sung tự chọn số tuyến song song, kiểm tra ngắn mạch adiabatic, sụt áp khởi động motor và gợi ý AT/AF. Ampacity và Ø ngoài trong app vẫn là dữ liệu/ước tính phục vụ sơ bộ. Khả năng tải nhiệt được hiệu chỉnh theo số lõi mang dòng (loaded conductors), không chỉ theo số lõi vật lý; hồ sơ thi công cuối cùng phải kiểm tra theo tiêu chuẩn áp dụng, phương pháp lắp đặt thực tế và catalogue nhà sản xuất. IEC 60228 quy định tiết diện danh nghĩa và điện trở dây dẫn; IEC 60364-5-52 liên quan lựa chọn hệ thống dây dẫn và sụt áp.
+  </footer>
+</div>
+
+<script>
+let mode='power';
+
+let systemMode='lv';
+function setSystemMode(m){
+  systemMode=m;
+  el('sysLV').classList.toggle('active',m==='lv'); el('sysMV').classList.toggle('active',m==='mv');
+  el('lvArea').classList.toggle('hidden',m!=='lv'); el('mvArea').classList.toggle('hidden',m!=='mv');
+  if(m==='mv') calcMV(); else calcLV();
+}
+function calc(){ if(systemMode==='mv') calcMV(); else calcLV(); }
+const mvSizes=[35,50,70,95,120,150,185,240,300,400,500,630];
+const mvAmpCuAir={35:170,50:205,70:250,95:300,120:340,150:385,185:435,240:505,300:570,400:655,500:735,630:835};
+function mvAmpacity(sz){
+  let a=mvAmpCuAir[sz]||0;
+  if(el('mvMaterial').value==='al') a*=0.78;
+  const inst=el('mvInstall').value; if(inst==='duct') a*=0.80; if(inst==='buried') a*=0.88;
+  if(el('mvCores').value==='3') a*=0.88;
+  if(el('mvCores').value==='1' && el('mvArrangement').value==='flat') a*=0.96;
+  return a*num('mvK',1);
+}
+function mvLoadCurrent(){return num('mvPower')*1000/(Math.sqrt(3)*num('mvVoltage',11000)*num('mvPf',0.9));}
+function mvR20(sz){const rho=el('mvMaterial').value==='cu'?0.0175:0.0282; return rho*1000/sz*1.03;}
+function mvVD(sz,Iper){let R=mvR20(sz)/1000*1.25, X=(el('mvArrangement').value==='trefoil'?0.00010:0.00013),pf=num('mvPf',.9),sn=Math.sqrt(Math.max(0,1-pf*pf)),L=num('mvLength'),V=num('mvVoltage'); let dv=Math.sqrt(3)*Iper*L*(R*pf+X*sn);return {v:dv,pct:100*dv/V};}
+function mvKCond(){return el('mvMaterial').value==='cu'?143:94;}
+function mvCondSmin(par){let I=num('mvFault')*1000/par,t=num('mvFaultTime',1);return I*Math.sqrt(t)/mvKCond();}
+function mvScreenSmin(){let I=num('mvFault')*1000,t=num('mvFaultTime',1);return I*Math.sqrt(t)/143;}
+function syncMVVoltage(){const V=+el('mvVoltage').value, map={3300:'1.9/3.3(3.6)',6600:'3.8/6.6(7.2)',11000:'6.35/11(12)',22000:'12.7/22(24)'}; el('mvClass').value=map[V]||'12.7/22(24)'; calcMV();}
+function calcMV(){
+  const Iload=mvLoadCurrent(), Ides=Iload*num('mvReserve',1.15), par=Math.max(1,Math.round(num('mvParallel',1))), vdLim=num('mvVDLimit',3), smin=mvCondSmin(par);
+  let pick=null;
+  for(const sz of mvSizes){const amp=mvAmpacity(sz),vd=mvVD(sz,Ides/par),okA=amp>=Ides/par,okV=vd.pct<=vdLim,okSC=sz>=smin;if(okA&&okV&&okSC){pick={sz,amp,vd,okA,okV,okSC};break;}}
+  if(!pick){const sz=mvSizes[mvSizes.length-1],amp=mvAmpacity(sz),vd=mvVD(sz,Ides/par);pick={sz,amp,vd,okA:amp>=Ides/par,okV:vd.pct<=vdLim,okSC:sz>=smin};}
+  const scr=+el('mvScreen').value,scrMin=mvScreenSmin(),scrOK=scr>=scrMin;
+  const cfg=el('mvCores').value==='1'?`${par>1?par+' × ':''}3 × 1C × ${pick.sz} mm²`:`${par>1?par+' × ':''}3C × ${pick.sz} mm²`;
+  el('mvRSize').textContent=pick.sz; el('mvRConfig').textContent='mm² • '+cfg; el('mvRCurrent').textContent=fmt(Ides,1); el('mvRAmp').textContent=fmt(pick.amp,0)+' A/cable';
+  el('mvSAmp').textContent=pick.okA?'PASS':'CHECK';el('mvSAmp').className='status '+(pick.okA?'ok':'bad'); el('mvRVD').textContent=fmt(pick.vd.pct,2)+' %';el('mvSVD').textContent=pick.okV?'PASS':'OVER LIMIT';el('mvSVD').className='status '+(pick.okV?'ok':'bad');
+  el('mvRSC').textContent='Smin '+fmt(smin,1)+' mm²';el('mvSSC').textContent=pick.okSC?'PASS':'FAIL';el('mvSSC').className='status '+(pick.okSC?'ok':'bad');
+  el('mvRScreen').textContent=scr+' mm²';el('mvSScreen').textContent=scrOK?'PASS*':'CHECK*';el('mvSScreen').className='status '+(scrOK?'ok':'warn');
+  el('mvRClass').textContent=el('mvClass').value+' kV'; el('mvRBond').textContent=el('mvBonding').options[el('mvBonding').selectedIndex].text;
+  el('mvDesignation').textContent=`${cfg} ${el('mvMaterial').value.toUpperCase()} / XLPE / Cu screen ${scr} mm² • ${el('mvClass').value} kV`;
+  el('mvSmin').textContent=fmt(smin,1)+' mm² / run';el('mvScreenMin').textContent=fmt(scrMin,1)+' mm²*';
+  el('mvNote').textContent='*Screen fault check đang dùng giả thiết bảo thủ toàn bộ Isc đi qua screen. Thực tế phải dùng dòng earth-fault qua screen, bonding và thời gian bảo vệ. Ampacity là dữ liệu sàng lọc sơ bộ, cần thay bằng catalogue đúng cable design.';
+}
+function resetMV(){el('mvVoltage').value='11000';el('mvPower').value='1000';el('mvPf').value='.9';el('mvLength').value='500';el('mvReserve').value='1.15';el('mvMaterial').value='cu';el('mvInstall').value='buried';el('mvK').value='1';el('mvFault').value='20';el('mvFaultTime').value='1';el('mvScreen').value='25';el('mvParallel').value='1';syncMVVoltage();}
+
+const sizes=[1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240,300,400,500,630];
+
+// Reference quick-selection ampacity, A, intentionally approximate/conservative.
+// Base data shaped for common LV multicore Cu cable use; app applies material/insulation/install modifiers.
+const baseAmpCuXLPETray={
+  1.5:18,2.5:25,4:34,6:43,10:60,16:80,25:105,35:130,50:155,70:195,
+  95:235,120:270,150:310,185:350,240:415,300:475,400:560,500:640,630:730
+};
+const cbRatings=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,225,250,315,350,400,500,630,800,1000,1250,1600];
+const cbFrames=[32,63,100,125,160,250,400,630,800,1000,1250,1600,2000,2500,3200];
+const icuRatings=[6,10,15,18,25,36,50,70,85,100,120,150];
+function icuSuggestion(){ const isc=num('faultKA',0); if(!(isc>0)) return 'Nhập Isc để gợi ý'; const r=icuRatings.find(x=>x>=isc); return r?`≥ ${r} kA tại Ue`:`> ${icuRatings[icuRatings.length-1]} kA — kiểm tra thiết bị chuyên dụng`; }
+function kAdiabatic(){
+  const mat=el('material').value, ins=el('insulation').value;
+  if(mat==='cu') return ins==='xlpe'?143:115;
+  return ins==='xlpe'?94:76;
+}
+function scMinimumSizePerRun(par){
+  const ika=num('faultKA',0), t=num('faultTime',0.2);
+  if(!(ika>0) || !(t>0)) return 0;
+  return (ika*1000/par)*Math.sqrt(t)/kAdiabatic();
+}
+function cbSuggestion(designI,totalAmp){
+  let at=cbRatings.find(x=>x>=designI && x<=totalAmp);
+  if(!at) at=cbRatings.find(x=>x>=designI);
+  if(!at) return {text:'>1600 A — cần thiết kế riêng',at:null,af:null};
+  let af=cbFrames.find(x=>x>=at) || cbFrames[cbFrames.length-1];
+  let suffix=at<=totalAmp?'':' — kiểm tra lại ampacity';
+  return {text:`${at} AT / ${af} AF${suffix}`,at,af};
+}
+function startMultiplier(){ return el('loadType').value==='motor' ? num('startMult',6) : 1; }
+
+function el(id){return document.getElementById(id)}
+function num(id, fallback=0){let v=parseFloat(el(id).value); return Number.isFinite(v)?v:fallback}
+function setMode(m){
+  mode=m; el('mPower').classList.toggle('active',m==='power'); el('mCurrent').classList.toggle('active',m==='current');
+  el('powerField').classList.toggle('hidden',m!=='power'); el('currentField').classList.toggle('hidden',m!=='current');
+}
+function fmt(x,d=1){return Number.isFinite(x)?x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—'}
+function loadCurrent(){
+  if(mode==='current') return num('current');
+  let p=num('power')*1000, v=num('voltage'), pf=num('pf',1), eff=num('eff',1), ph=el('phase').value;
+  let powerType=el('powerType').value;
+  let etaFactor = powerType==='output' ? eff : 1;
+  if(ph==='3') return p/(Math.sqrt(3)*v*pf*etaFactor);
+  if(ph==='1') return p/(v*pf*etaFactor);
+  return p/(v*etaFactor);
+}
+function ampacityBase(size){
+  let a=baseAmpCuXLPETray[size] || 0;
+  if(el('material').value==='al') a*=0.78;
+  if(el('insulation').value==='pvc') a*=0.86;
+  let ins=el('install').value;
+  if(ins==='conduit') a*=0.82;
+  if(ins==='buried') a*=0.90;
+  let loaded=+el('loaded').value;
+  // Thermal correction is based on loaded conductors, not simply physical core count.
+  // PE is normally not a loaded conductor. Neutral treatment depends on actual load/harmonics.
+  if(loaded===2) a*=1.05;
+  else if(loaded===3) a*=1.00;
+  else if(loaded>=4) a*=0.90;
+  return a;
+}
+function resistance20(size){
+  // ohm/km approximation from resistivity; conservative factor accounts for stranded construction
+  const rho=el('material').value==='cu'?0.0175:0.0282;
+  return rho*1000/size*1.03;
+}
+function voltageDrop(size, currentPerCable){
+  let L=num('length'), V=num('voltage'), ph=el('phase').value, pf=num('pf',1);
+  let R=resistance20(size)/1000 * 1.20; // operating-temp approximation
+  let X=0.00008; // ohm/m typical LV approximation
+  let sin=Math.sqrt(Math.max(0,1-pf*pf));
+  let z=R*pf+X*sin;
+  let dv = ph==='3' ? Math.sqrt(3)*currentPerCable*L*z : 2*currentPerCable*L*z;
+  if(ph==='dc') dv=2*currentPerCable*L*R;
+  return {v:dv,pct:dv/V*100};
+}
+function estimatedOD(size, cores){
+  // visualization-oriented geometric estimate only
+  let dc=Math.sqrt(4*size/Math.PI);
+  let insulated=dc + (size<=16?1.8:size<=70?2.4:size<=185?3.2:4.0);
+  let pack = cores==1?1 : cores==2?2.05 : cores==3?2.20 : cores==4?2.45 : 2.75;
+  return insulated*pack + (size<=16?3.5:size<=70?5:size<=185?6.5:8);
+}
+function conductorMass(size, cores){
+  let density=el('material').value==='cu'?8960:2700; // kg/m3
+  return size*1e-6*density*cores; // kg/m
+}
+function estimatedCableMass(size, cores, od){
+  let metal=conductorMass(size,cores);
+  let grossArea=Math.PI*(od/1000)**2/4;
+  let conductorVolArea=size*1e-6*cores;
+  let polymerArea=Math.max(0,grossArea-conductorVolArea);
+  let polymer=polymerArea*1450; // effective kg/m3
+  return metal+polymer;
+}
+function chooseCB(designI, amp){
+  // choose next standard >= design current but preferably <= cable ampacity
+  let possible=cbRatings.find(x=>x>=designI && x<=amp);
+  if(possible) return possible+' A';
+  let next=cbRatings.find(x=>x>=designI);
+  return next ? next+' A (kiểm tra phối hợp cáp)' : '> 1600 A';
+}
+function evaluate(size, designI, parOverride){
+  let par=Math.max(1,Math.round(parOverride||num('parallel',1)));
+  let Iper=designI/par;
+  let amp=ampacityBase(size)*num('kt',1)*num('kg',1);
+  let vd=voltageDrop(size,Iper);
+  let scMin=scMinimumSizePerRun(par);
+  let okSC=scMin<=0 || size>=scMin;
+  let isMotor=el('loadType').value==='motor';
+  let Istart=loadCurrent()*startMultiplier()/par;
+  let startVD=isMotor?voltageDrop(size,Istart):{pct:0,v:0};
+  let okStart=!isMotor || startVD.pct<=num('startVDLimit',15);
+  let okA=amp>=Iper, okV=vd.pct<=num('vdLimit',3);
+  return {size,par,Iper,amp,vd,scMin,okSC,startVD,okStart,okA,okV,ok:okA&&okV&&okSC&&okStart};
+}
+function chooseOption(designI){
+  if(el('autoParallel').checked){
+    for(let par=1;par<=12;par++){
+      for(const size of sizes){
+        const e=evaluate(size,designI,par);
+        if(e.ok) return e;
+      }
+    }
+    return evaluate(sizes[sizes.length-1],designI,12);
+  }
+  const par=Math.max(1,Math.round(num('parallel',1)));
+  return sizes.map(s=>evaluate(s,designI,par)).find(x=>x.ok) || evaluate(sizes[sizes.length-1],designI,par);
+}
+function syncStartMethod(){
+  const m=el('startMethod').value;
+  const map={dol:6,star:2.5,soft:3,vfd:1.2};
+  if(m!=='custom') el('startMult').value=map[m];
+  el('startMult').disabled=m!=='custom';
+  calc();
+}
+function syncLoadType(){
+  const t=el('loadType').value;
+  const pf=el('pf'), eff=el('eff'), ptype=el('powerType');
+  const pfHint=el('pfHint'), effHint=el('effHint');
+
+  pf.disabled=false; eff.disabled=false; ptype.disabled=false;
+
+  if(t==='heater'){
+    pf.value='1.00'; eff.value='1.00'; ptype.value='input';
+    pf.disabled=true; eff.disabled=true; ptype.disabled=true;
+    pfHint.textContent='Heater thuần trở: cosφ ≈ 1.00';
+    effHint.textContent='Heater: dùng công suất điện đầu vào, η không cần áp dụng.';
+  } else if(t==='motor'){
+    pf.value='0.85'; eff.value='0.92'; ptype.value='output';
+    pfHint.textContent='Motor: dùng cosφ theo nameplate/catalogue nếu có.';
+    effHint.textContent='Nếu kW là shaft/output power thì app chia thêm cho η.';
+  } else if(t==='general'){
+    pf.value='0.90'; eff.value='1.00'; ptype.value='input';
+    eff.disabled=true;
+    pfHint.textContent='General load: nhập cosφ thiết kế hoặc đo được.';
+    effHint.textContent='Nhập electrical input power nên không dùng η.';
+  } else if(t==='vfd'){
+    pf.value='0.95'; eff.value='1.00'; ptype.value='input';
+    eff.disabled=true;
+    pfHint.textContent='VFD/UPS: ưu tiên rated input current của nhà sản xuất.';
+    effHint.textContent='App chỉ tính sơ bộ từ kW; harmonic cần kiểm tra riêng.';
+  } else {
+    pfHint.textContent='Custom: tự nhập cosφ.';
+    effHint.textContent='η chỉ có tác dụng khi Power type = output.';
+  }
+  const isMotor=t==='motor';
+  ['motorStartField','startMultField','startVDField'].forEach(id=>el(id).classList.toggle('hidden',!isMotor));
+  if(isMotor) syncStartMethod(); else calc();
+}
+function syncLoaded(){
+  const cfg=el('systemConfig').value;
+  const map={LN:2,"3P":3,"3PPE":3,"3PN":3,"3PNPE":3};
+  if(cfg!=="custom" && map[cfg]) el('loaded').value=String(map[cfg]);
+  // Suggest physical core count without forcing an impossible change.
+  const coreMap={LN:2,"3P":3,"3PPE":4,"3PN":4,"3PNPE":5};
+  if(cfg!=="custom" && coreMap[cfg]) el('cores').value=String(coreMap[cfg]);
+  calc();
+}
+
+function getCoreLabels(){
+  const cfg=el('systemConfig').value;
+  const cores=+el('cores').value;
+  if(cfg==='LN') return ['L','N'];
+  if(cfg==='3P') return ['L1','L2','L3'];
+  if(cfg==='3PPE') return ['L1','L2','L3','PE'];
+  if(cfg==='3PN') return ['L1','L2','L3','N'];
+  if(cfg==='3PNPE') return ['L1','L2','L3','N','PE'];
+  return Array.from({length:cores},(_,i)=>'C'+(i+1));
+}
+function drawCableCrossSection(od, coreD){
+  const box=el('cableCross');
+  const cores=+el('cores').value;
+  let labels=getCoreLabels();
+  if(labels.length!==cores) labels=Array.from({length:cores},(_,i)=>labels[i]||('C'+(i+1)));
+  const outerPx=Math.max(88,Math.min(150,od*2.5));
+  box.style.width=outerPx+'px';
+  box.style.height=outerPx+'px';
+  box.innerHTML='';
+
+  // Visual core diameter is scaled to fit the cable while preserving relative sense.
+  let corePx=Math.max(22, Math.min(outerPx*0.38, coreD*3.0));
+  if(cores===1) corePx=outerPx*0.58;
+  if(cores>=4) corePx=Math.min(corePx,outerPx*0.31);
+  if(cores===5) corePx=Math.min(corePx,outerPx*0.28);
+
+  let pos=[];
+  if(cores===1) pos=[[50,50]];
+  if(cores===2) pos=[[34,50],[66,50]];
+  if(cores===3) pos=[[50,31],[33,63],[67,63]];
+  if(cores===4) pos=[[34,34],[66,34],[34,66],[66,66]];
+  if(cores===5) pos=[[50,50],[50,25],[74,43],[65,72],[35,72]];
+
+  labels.slice(0,cores).forEach((lab,i)=>{
+    const c=document.createElement('div');
+    c.className='cableCore '+(lab==='PE'?'core-PE':lab==='N'?'core-N':lab==='L1'||lab==='L'?'core-L1':lab==='L2'?'core-L2':'core-L3');
+    c.style.left=pos[i][0]+'%';
+    c.style.top=pos[i][1]+'%';
+    c.style.width=corePx+'px';
+    c.style.height=corePx+'px';
+    c.textContent=lab;
+    box.appendChild(c);
+  });
+}
+function calcLV(){
+  let Iload=loadCurrent(), reserve=num('reserve',1.25), designI=Iload*reserve;
+  if(!(Iload>0)){alert('Vui lòng nhập dữ liệu tải hợp lệ.');return}
+  let selected=chooseOption(designI);
+  let s=selected.size, cores=+el('cores').value, par=selected.par;
+  if(el('autoParallel').checked) el('parallel').value=par;
+  let dc=Math.sqrt(4*s/Math.PI);
+  let odInput=num('actualOD',0), od=odInput>0?odInput:estimatedOD(s,cores);
+  let length=num('length');
+  let massPerM=num('actualWeight',0);
+  if(!(massPerM>0)) massPerM=estimatedCableMass(s,cores,od);
+  let totalMass=massPerM*length*par;
+  let R=resistance20(s);
+  let loss;
+  let activeConductors=el('phase').value==='3'?3:2;
+  loss=selected.Iper*selected.Iper*(R/1000*length)*activeConductors*par;
+  let density=selected.Iper/s;
+  let trayArea=Math.PI*od*od/4*par;
+  let loaded=+el('loaded').value;
+  let cfgLabel=el('systemConfig').options[el('systemConfig').selectedIndex].text;
+  let config=`${par>1?par+' × ':''}${cores}C × ${s} mm² ${el('material').value.toUpperCase()} ${el('insulation').value.toUpperCase()} • ${cfgLabel} • ${loaded} loaded`;
+
+  el('rSize').textContent=fmt(s,s<10?1:0);
+  el('rCableText').textContent=`mm²  •  ${cores}C`;
+  el('rDesignI').textContent=fmt(designI,1);
+  el('rLoadI').textContent=fmt(Iload,1)+' A';
+  let basis;
+  if(mode==='current') basis='Direct current input';
+  else {
+    const lt=el('loadType').options[el('loadType').selectedIndex].text;
+    const pt=el('powerType').value==='output'?'Output kW → η applied':'Input electrical kW';
+    basis=lt+' • '+pt;
+  }
+  el('rPowerBasis').textContent=basis;
+  el('rAmp').textContent=fmt(selected.amp,1)+' A / cable';
+  el('sAmp').textContent=selected.okA?'PASS':'CHECK';
+  el('sAmp').className='status '+(selected.okA?'ok':'bad');
+  el('rVD').textContent=fmt(selected.vd.pct,2)+' %';
+  el('sVD').textContent=selected.okV?'PASS':'OVER LIMIT';
+  el('sVD').className='status '+(selected.okV?'ok':'bad');
+  el('rCoreD').textContent=fmt(dc,1)+' mm';
+  el('rOD').textContent=fmt(od,1)+' mm'+(odInput>0?'*':'');
+  el('rWeight').textContent=fmt(totalMass,1)+' kg';
+  el('sumConfig').textContent=config;
+  el('sumDensity').textContent=fmt(density,2)+' A/mm²';
+  el('sumR').textContent=fmt(R,3)+' Ω/km @20°C approx.';
+  el('sumLoss').textContent=fmt(loss/1000,2)+' kW';
+  el('sumTray').textContent=fmt(trayArea,0)+' mm² (circular footprint)';
+  const cb=cbSuggestion(designI,selected.amp*par);
+  el('sumCB').textContent=cb.text;
+  el('sumIcu').textContent=icuSuggestion();
+  el('sumDesignation').textContent=`${par>1?par+'×(':''}${cores}C×${s} mm²${par>1?')':''} ${el('material').value.toUpperCase()} ${el('insulation').value.toUpperCase()}`;
+  el('rSC').textContent=selected.scMin>0?`Smin ${fmt(selected.scMin,1)} mm²`:'Bỏ qua';
+  el('sSC').textContent=selected.okSC?'PASS':'FAIL';
+  el('sSC').className='status '+(selected.okSC?'ok':'bad');
+  const isMotor=el('loadType').value==='motor';
+  el('rStartVD').textContent=isMotor?fmt(selected.startVD.pct,1)+' %':'N/A';
+  el('sStartVD').textContent=isMotor?(selected.okStart?'PASS':'OVER LIMIT'):'—';
+  el('sStartVD').className='status '+(isMotor?(selected.okStart?'ok':'bad'):'');
+
+  let maxPx=105, corePx=Math.max(28,Math.min(maxPx,dc*3.0));
+  el('coreCircle').style.width=corePx+'px';
+  el('coreCircle').style.height=corePx+'px';
+  el('coreCircle').textContent=fmt(dc,1)+' mm';
+  drawCableCrossSection(od,dc);
+
+  let odMsg=odInput>0?'Ø ngoài lấy theo giá trị catalogue anh nhập.':'Ø ngoài là ước tính hình học để hình dung kích thước; cần thay bằng catalogue khi chốt vật tư.';
+  let calcBasis = mode==='current' ? 'Dòng được nhập trực tiếp nên cosφ và η không tham gia tính dòng.' :
+    (el('powerType').value==='output' ? 'Công suất output: app có áp dụng cosφ và η để suy ra dòng điện đầu vào.' :
+    'Công suất điện đầu vào: app áp dụng cosφ nhưng không chia thêm cho η.');
+  el('note').innerHTML=`<b>Kết luận:</b> ${config}. Dòng thiết kế ${fmt(designI,1)} A; mỗi tuyến chịu ${fmt(selected.Iper,1)} A. ${calcBasis} ${odMsg} ${selected.ok?'Ampacity, sụt áp, ngắn mạch và kiểm tra motor (nếu áp dụng) đều đạt theo dữ liệu đang nhập.':'Có kiểm tra chưa đạt — cần tăng tiết diện, tăng số tuyến song song hoặc rà lại dữ liệu bảo vệ/khởi động.'}`;
+
+  renderCompare(selected.size,designI);
+}
+function renderCompare(sel,designI){
+  const selected=chooseOption(designI);
+  let options=[];
+  for(let dp=-1;dp<=1;dp++){
+    let par=Math.max(1,Math.min(12,selected.par+dp));
+    let idx=sizes.indexOf(sel);
+    for(let ds=-1;ds<=1;ds++){
+      let i=Math.max(0,Math.min(sizes.length-1,idx+ds));
+      let e=evaluate(sizes[i],designI,par);
+      if(!options.some(o=>o.size===e.size&&o.par===e.par)) options.push(e);
+    }
+  }
+  options.sort((a,b)=>a.par-b.par || a.size-b.size);
+  let rows='';
+  options.forEach(e=>{
+    let d=Math.sqrt(4*e.size/Math.PI);
+    let issues=[]; if(!e.okA)issues.push('Ampacity'); if(!e.okV)issues.push('VD'); if(!e.okSC)issues.push('SC'); if(!e.okStart)issues.push('Start');
+    let st=e.ok?'PASS':issues.join(' + ');
+    let selectedRow=e.size===selected.size&&e.par===selected.par;
+    rows+=`<tr class="${selectedRow?'selected':''}"><td>${e.par} × ${e.size} mm²</td><td>${fmt(d,1)} mm</td><td>${fmt(e.amp,1)} A</td><td>${fmt(e.Iper,1)} A</td><td>${fmt(e.vd.pct,2)}%</td><td class="${e.okSC?'ok':'bad'}">${e.okSC?'PASS':'> '+fmt(e.scMin,1)}</td><td class="${e.okStart?'ok':'bad'}">${el('loadType').value==='motor'?fmt(e.startVD.pct,1)+'%':'N/A'}</td><td class="${e.ok?'ok':'bad'}">${st}</td></tr>`;
+  });
+  el('compareBody').innerHTML=rows;
+}
+function resetApp(){location.reload()}
+document.querySelectorAll('input,select').forEach(x=>x.addEventListener('change',calc));
+el('autoParallel').addEventListener('change',()=>{el('parallel').disabled=el('autoParallel').checked;calc();});
+el('parallel').disabled=true;
+syncLoadType();
+syncLoaded();
+syncStartMethod();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "Electrical Cable Selector V6 - LV & MV up to 22 kV",
+  "short_name": "Cable Selector",
+  "description": "Electrical cable sizing tool for LV and MV systems up to 22 kV.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#1769e0",
+  "icons": [
+    {"src":"./icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
