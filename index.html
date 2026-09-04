@@ -86,12 +86,14 @@ footer{font-size:10px;color:var(--muted);margin:14px 0 4px;line-height:1.45}
           <div class="field"><label>Hệ số derating tổng K</label><input id="mvK" type="number" value="1.00" min="0.1" max="1.5" step="0.01"><small>Nhiệt độ đất/không khí, thermal resistivity, grouping...</small></div>
           <div class="field"><label>Screen Cu</label><select id="mvScreen"><option value="16">16 mm²</option><option value="25" selected>25 mm²</option><option value="35">35 mm²</option><option value="50">50 mm²</option><option value="70">70 mm²</option><option value="95">95 mm²</option></select></div>
           <div class="field"><label>Screen bonding</label><select id="mvBonding"><option value="both" selected>Both-end bonding</option><option value="single">Single-point bonding</option><option value="cross">Cross-bonding</option></select></div>
-          <div class="field"><label>Isc 3 pha</label><input id="mvFault" type="number" value="20" min="0" step="0.1"><small>kA rms</small></div>
+          <div class="field"><label>Isc 3 pha</label><input id="mvFault" type="number" value="20" min="0" step="0.1"><small>kA rms — dùng cho lõi dẫn</small></div>
+          <div class="field"><label>Dòng chạm đất qua screen</label><input id="mvEarthFault" type="number" value="6" min="0" step="0.1"><small>kA rms — cho kiểm tra screen (KHÔNG dùng Isc 3 pha)</small></div>
+          <div class="field"><label>Nhiệt độ đất/môi trường</label><input id="mvAmbient" type="number" value="20" min="0" step="1"><small>°C — chôn đất 20°C, không khí 30°C</small></div>
           <div class="field"><label>Thời gian cắt</label><input id="mvFaultTime" type="number" value="1" min="0.01" step="0.05"><small>s</small></div>
           <div class="field"><label>Sụt áp cho phép</label><input id="mvVDLimit" type="number" value="3" min="0.1" step="0.1"><small>%</small></div>
           <div class="field"><label>Số mạch song song / pha</label><input id="mvParallel" type="number" value="1" min="1" max="6"></div>
         </div>
-        <div class="actions"><button class="btn primary" onclick="calcMV()">Tính chọn cáp MV</button><button class="btn" onclick="resetMV()">Reset MV</button></div>
+        <div class="actions"><button class="btn primary" onclick="calcMV()">Tính chọn cáp MV</button><button class="btn ghost" onclick="window.print()">In / PDF</button><button class="btn" onclick="resetMV()">Reset MV</button></div>
       </section>
       <section class="card">
         <div class="title">③ Kết quả MV</div>
@@ -101,6 +103,15 @@ footer{font-size:10px;color:var(--muted);margin:14px 0 4px;line-height:1.45}
         <div class="note">MV mode dùng dữ liệu ampacity tham khảo để sàng lọc sơ bộ. Thiết kế phát hành phải đối chiếu catalogue đúng hãng/cấu tạo, điều kiện đất, khoảng cách cáp, bonding và IEC 60502-2/IEC 60287.</div>
       </section>
     </div>
+    <section class="card" style="margin-top:14px">
+      <div class="title">④ Bảng so sánh tiết diện MV gần nhất</div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Tiết diện</th><th>Ampacity/run</th><th>Dòng/run</th><th>Sụt áp</th><th>SC lõi</th><th>Đánh giá</th></tr></thead>
+          <tbody id="mvCompareBody"></tbody>
+        </table>
+      </div>
+    </section>
   </section>
 
   <div id="lvArea" class="grid">
@@ -326,9 +337,9 @@ footer{font-size:10px;color:var(--muted);margin:14px 0 4px;line-height:1.45}
         <div class="metric"><div class="k">Cơ sở tính công suất</div><div class="v" id="rPowerBasis" style="font-size:13px">—</div></div>
         <div class="metric"><div class="k">Ampacity hiệu chỉnh</div><div class="v" id="rAmp">— A</div><div class="status" id="sAmp"></div></div>
         <div class="metric"><div class="k">Sụt áp</div><div class="v" id="rVD">— %</div><div class="status" id="sVD"></div></div>
-        <div class="metric"><div class="k">Ø lõi tương đương</div><div class="v" id="rCoreD">— mm</div></div>
-        <div class="metric"><div class="k">Ø ngoài ước tính</div><div class="v" id="rOD">— mm</div><div class="status warn">Tham khảo</div></div>
-        <div class="metric"><div class="k">Khối lượng tuyến</div><div class="v" id="rWeight">— kg</div></div>
+        <div class="metric"><div class="k">Ø lõi tương đương</div><div class="v" id="rCoreD">— mm</div><div class="status warn">Tham khảo hình học</div></div>
+        <div class="metric"><div class="k">Ø ngoài ước tính</div><div class="v" id="rOD">— mm</div><div class="status warn">Tham khảo — nhập catalogue</div></div>
+        <div class="metric"><div class="k">Khối lượng tuyến</div><div class="v" id="rWeight">— kg</div><div class="status warn">Tham khảo — nhập catalogue</div></div>
         <div class="metric"><div class="k">Ngắn mạch adiabatic</div><div class="v" id="rSC">—</div><div class="status" id="sSC"></div></div>
         <div class="metric"><div class="k">Sụt áp khởi động</div><div class="v" id="rStartVD">—</div><div class="status" id="sStartVD"></div></div>
       </div>
@@ -336,20 +347,20 @@ footer{font-size:10px;color:var(--muted);margin:14px 0 4px;line-height:1.45}
       <div class="visual">
         <div class="circleBox">
           <div class="circle" id="coreCircle">Core</div>
-          <div class="legend">Lõi dẫn tương đương</div>
+          <div class="legend">Lõi dẫn tương đương (tham khảo)</div>
         </div>
         <div class="circleBox">
           <div id="cableCross" class="cableCross"></div>
-          <div class="legend">Mặt cắt cáp hoàn chỉnh</div>
+          <div class="legend">Mặt cắt cáp — hình vẽ tượng trưng</div>
         </div>
       </div>
 
       <div class="summary">
         <div class="row"><div>Cấu hình cáp</div><div id="sumConfig">—</div></div>
         <div class="row"><div>Mật độ dòng trên lõi</div><div id="sumDensity">—</div></div>
-        <div class="row"><div>Điện trở DC tham khảo</div><div id="sumR">—</div></div>
-        <div class="row"><div>Tổn hao I²R tuyến</div><div id="sumLoss">—</div></div>
-        <div class="row"><div>Diện tích chiếm máng xấp xỉ</div><div id="sumTray">—</div></div>
+        <div class="row"><div>Điện trở DC @20°C (IEC 60228)</div><div id="sumR">—</div></div>
+        <div class="row"><div>Tổn hao I²R tuyến (tại nhiệt độ vận hành)</div><div id="sumLoss">—</div></div>
+        <div class="row"><div>Diện tích chiếm máng xấp xỉ (tham khảo)</div><div id="sumTray">—</div></div>
         <div class="row"><div>Ký hiệu cáp đề xuất</div><div id="sumDesignation">—</div></div>
         <div class="row"><div>CB đề xuất AT / AF</div><div id="sumCB">—</div></div>
         <div class="row"><div>Icu tối thiểu gợi ý</div><div id="sumIcu">—</div></div>
@@ -369,7 +380,7 @@ footer{font-size:10px;color:var(--muted);margin:14px 0 4px;line-height:1.45}
   </section>
 
   <footer>
-    V5 bổ sung tự chọn số tuyến song song, kiểm tra ngắn mạch adiabatic, sụt áp khởi động motor và gợi ý AT/AF. Ampacity và Ø ngoài trong app vẫn là dữ liệu/ước tính phục vụ sơ bộ. Khả năng tải nhiệt được hiệu chỉnh theo số lõi mang dòng (loaded conductors), không chỉ theo số lõi vật lý; hồ sơ thi công cuối cùng phải kiểm tra theo tiêu chuẩn áp dụng, phương pháp lắp đặt thực tế và catalogue nhà sản xuất. IEC 60228 quy định tiết diện danh nghĩa và điện trở dây dẫn; IEC 60364-5-52 liên quan lựa chọn hệ thống dây dẫn và sụt áp.
+    V6: ampacity LV tra theo phương pháp lắp đặt IEC 60364-5-52 (máng ≈ method C, ống ≈ B1, chôn ≈ D) thay cho một bảng nhân hệ số; điện trở dây dẫn lấy theo IEC 60228 và quy đổi về nhiệt độ vận hành; sụt áp dùng điện kháng theo tiết diện; gợi ý CB kiểm tra phối hợp Ib ≤ In ≤ Iz và I₂ ≤ 1,45·Iz; kiểm tra screen MV dùng dòng chạm đất riêng thay Isc 3 pha; lưu dữ liệu nhập tự động (localStorage). Vẫn giữ: tự chọn số tuyến song song, ngắn mạch adiabatic, sụt áp khởi động motor, bảng so sánh (cả LV & MV). Ampacity, Ø ngoài, khối lượng và mặt cắt trong app là dữ liệu/ước tính phục vụ sơ bộ — hồ sơ phát hành phải đối chiếu tiêu chuẩn áp dụng, phương pháp lắp đặt thực tế và catalogue nhà sản xuất (IEC 60228 điện trở dây dẫn; IEC 60364-5-52 & IEC 60287 khả năng tải và sụt áp; IEC 60364-5-54 ngắn mạch adiabatic).
   </footer>
 </div>
 
@@ -384,22 +395,41 @@ function setSystemMode(m){
   if(m==='mv') calcMV(); else calcLV();
 }
 function calc(){ if(systemMode==='mv') calcMV(); else calcLV(); }
+// ---- Shared: IEC 60228 conductor DC resistance @20°C (Ω/km), class 2 stranded ----
+const R20_CU={1.5:12.1,2.5:7.41,4:4.61,6:3.08,10:1.83,16:1.15,25:0.727,35:0.524,50:0.387,70:0.268,95:0.193,120:0.153,150:0.124,185:0.0991,240:0.0754,300:0.0601,400:0.0470,500:0.0366,630:0.0283};
+const R20_AL={16:1.91,25:1.20,35:0.868,50:0.641,70:0.443,95:0.320,120:0.253,150:0.206,185:0.164,240:0.125,300:0.100,400:0.0778,500:0.0605,630:0.0469};
+function r20Lookup(mat,sz){const t=(mat==='al')?R20_AL:R20_CU; if(t[sz]) return t[sz]; const rho=mat==='cu'?0.0175:0.0282; return rho*1000/sz;}
+function tempFactor(mat,theta){const a=mat==='cu'?0.00393:0.00403; return 1+a*(theta-20);}
+
 const mvSizes=[35,50,70,95,120,150,185,240,300,400,500,630];
 const mvAmpCuAir={35:170,50:205,70:250,95:300,120:340,150:385,185:435,240:505,300:570,400:655,500:735,630:835};
+function mvAmbientFactor(){
+  const inst=el('mvInstall').value, ref=(inst==='air')?30:20, th=num('mvAmbient',ref);
+  const f=Math.sqrt(Math.max(0,(90-th)/(90-ref)));
+  return (Number.isFinite(f)&&f>0)?f:1;
+}
 function mvAmpacity(sz){
   let a=mvAmpCuAir[sz]||0;
   if(el('mvMaterial').value==='al') a*=0.78;
   const inst=el('mvInstall').value; if(inst==='duct') a*=0.80; if(inst==='buried') a*=0.88;
   if(el('mvCores').value==='3') a*=0.88;
   if(el('mvCores').value==='1' && el('mvArrangement').value==='flat') a*=0.96;
-  return a*num('mvK',1);
+  return a*num('mvK',1)*mvAmbientFactor();
 }
 function mvLoadCurrent(){return num('mvPower')*1000/(Math.sqrt(3)*num('mvVoltage',11000)*num('mvPf',0.9));}
-function mvR20(sz){const rho=el('mvMaterial').value==='cu'?0.0175:0.0282; return rho*1000/sz*1.03;}
-function mvVD(sz,Iper){let R=mvR20(sz)/1000*1.25, X=(el('mvArrangement').value==='trefoil'?0.00010:0.00013),pf=num('mvPf',.9),sn=Math.sqrt(Math.max(0,1-pf*pf)),L=num('mvLength'),V=num('mvVoltage'); let dv=Math.sqrt(3)*Iper*L*(R*pf+X*sn);return {v:dv,pct:100*dv/V};}
+function mvRop(sz){const mat=el('mvMaterial').value; return r20Lookup(mat,sz)*tempFactor(mat,90);} // Ω/km @90°C (XLPE)
+function mvReactance(sz){ // Ω/m — arrangement + mild size dependence
+  const base=(el('mvArrangement').value==='flat')?0.145:0.110; // Ω/km
+  const adj= sz>=300?0.020 : sz>=120?0.010 : 0;
+  return (base+adj)/1000;
+}
+function mvVD(sz,Iper){
+  let R=mvRop(sz)/1000, X=mvReactance(sz), pf=num('mvPf',.9), sn=Math.sqrt(Math.max(0,1-pf*pf)), L=num('mvLength'), V=num('mvVoltage');
+  let dv=Math.sqrt(3)*Iper*L*(R*pf+X*sn); return {v:dv,pct:100*dv/V};
+}
 function mvKCond(){return el('mvMaterial').value==='cu'?143:94;}
 function mvCondSmin(par){let I=num('mvFault')*1000/par,t=num('mvFaultTime',1);return I*Math.sqrt(t)/mvKCond();}
-function mvScreenSmin(){let I=num('mvFault')*1000,t=num('mvFaultTime',1);return I*Math.sqrt(t)/143;}
+function mvScreenSmin(){let I=num('mvEarthFault',0)*1000,t=num('mvFaultTime',1);return I*Math.sqrt(t)/143;} // Cu screen k=143, earth-fault current
 function syncMVVoltage(){const V=+el('mvVoltage').value, map={3300:'1.9/3.3(3.6)',6600:'3.8/6.6(7.2)',11000:'6.35/11(12)',22000:'12.7/22(24)'}; el('mvClass').value=map[V]||'12.7/22(24)'; calcMV();}
 function calcMV(){
   const Iload=mvLoadCurrent(), Ides=Iload*num('mvReserve',1.15), par=Math.max(1,Math.round(num('mvParallel',1))), vdLim=num('mvVDLimit',3), smin=mvCondSmin(par);
@@ -411,22 +441,47 @@ function calcMV(){
   el('mvRSize').textContent=pick.sz; el('mvRConfig').textContent='mm² • '+cfg; el('mvRCurrent').textContent=fmt(Ides,1); el('mvRAmp').textContent=fmt(pick.amp,0)+' A/cable';
   el('mvSAmp').textContent=pick.okA?'PASS':'CHECK';el('mvSAmp').className='status '+(pick.okA?'ok':'bad'); el('mvRVD').textContent=fmt(pick.vd.pct,2)+' %';el('mvSVD').textContent=pick.okV?'PASS':'OVER LIMIT';el('mvSVD').className='status '+(pick.okV?'ok':'bad');
   el('mvRSC').textContent='Smin '+fmt(smin,1)+' mm²';el('mvSSC').textContent=pick.okSC?'PASS':'FAIL';el('mvSSC').className='status '+(pick.okSC?'ok':'bad');
-  el('mvRScreen').textContent=scr+' mm²';el('mvSScreen').textContent=scrOK?'PASS*':'CHECK*';el('mvSScreen').className='status '+(scrOK?'ok':'warn');
+  el('mvRScreen').textContent=scr+' mm²';el('mvSScreen').textContent=scrOK?'PASS':'CHECK';el('mvSScreen').className='status '+(scrOK?'ok':'warn');
   el('mvRClass').textContent=el('mvClass').value+' kV'; el('mvRBond').textContent=el('mvBonding').options[el('mvBonding').selectedIndex].text;
   el('mvDesignation').textContent=`${cfg} ${el('mvMaterial').value.toUpperCase()} / XLPE / Cu screen ${scr} mm² • ${el('mvClass').value} kV`;
-  el('mvSmin').textContent=fmt(smin,1)+' mm² / run';el('mvScreenMin').textContent=fmt(scrMin,1)+' mm²*';
-  el('mvNote').textContent='*Screen fault check đang dùng giả thiết bảo thủ toàn bộ Isc đi qua screen. Thực tế phải dùng dòng earth-fault qua screen, bonding và thời gian bảo vệ. Ampacity là dữ liệu sàng lọc sơ bộ, cần thay bằng catalogue đúng cable design.';
+  el('mvSmin').textContent=fmt(smin,1)+' mm² / run';el('mvScreenMin').textContent=fmt(scrMin,1)+' mm²';
+  el('mvNote').textContent='Screen được kiểm tra theo dòng chạm đất riêng ('+fmt(num('mvEarthFault',0),1)+' kA) đi qua screen — không phải Isc 3 pha. Giá trị này phụ thuộc cách nối đất trung tính, bonding và thời gian bảo vệ; cần lấy từ tính toán earth-fault hệ thống. Ampacity là dữ liệu sàng lọc sơ bộ, phải thay bằng catalogue đúng cable design & IEC 60287.';
+  renderMVCompare(pick.sz,Ides,par,vdLim,smin);
 }
-function resetMV(){el('mvVoltage').value='11000';el('mvPower').value='1000';el('mvPf').value='.9';el('mvLength').value='500';el('mvReserve').value='1.15';el('mvMaterial').value='cu';el('mvInstall').value='buried';el('mvK').value='1';el('mvFault').value='20';el('mvFaultTime').value='1';el('mvScreen').value='25';el('mvParallel').value='1';syncMVVoltage();}
+function renderMVCompare(sel,Ides,par,vdLim,smin){
+  const idx=mvSizes.indexOf(sel);
+  let rows='';
+  for(let ds=-2;ds<=2;ds++){
+    const i=Math.max(0,Math.min(mvSizes.length-1,idx+ds));
+    const sz=mvSizes[i]; if(rows.includes('data-sz="'+sz+'"')) continue;
+    const amp=mvAmpacity(sz), Iper=Ides/par, vd=mvVD(sz,Iper), okA=amp>=Iper, okV=vd.pct<=vdLim, okSC=sz>=smin, ok=okA&&okV&&okSC;
+    let issues=[]; if(!okA)issues.push('Ampacity'); if(!okV)issues.push('VD'); if(!okSC)issues.push('SC');
+    rows+=`<tr data-sz="${sz}" class="${sz===sel?'selected':''}"><td>${par>1?par+' × ':''}${sz} mm²</td><td>${fmt(amp,0)} A</td><td>${fmt(Iper,1)} A</td><td>${fmt(vd.pct,2)}%</td><td class="${okSC?'ok':'bad'}">${okSC?'PASS':'> '+fmt(smin,1)}</td><td class="${ok?'ok':'bad'}">${ok?'PASS':issues.join(' + ')}</td></tr>`;
+  }
+  el('mvCompareBody').innerHTML=rows;
+}
+function resetMV(){el('mvVoltage').value='11000';el('mvPower').value='1000';el('mvPf').value='.9';el('mvLength').value='500';el('mvReserve').value='1.15';el('mvMaterial').value='cu';el('mvInstall').value='buried';el('mvK').value='1';el('mvFault').value='20';el('mvEarthFault').value='6';el('mvAmbient').value='20';el('mvFaultTime').value='1';el('mvScreen').value='25';el('mvParallel').value='1';syncMVVoltage();if(typeof saveState==='function')saveState();}
 
 const sizes=[1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240,300,400,500,630];
 
-// Reference quick-selection ampacity, A, intentionally approximate/conservative.
-// Base data shaped for common LV multicore Cu cable use; app applies material/insulation/install modifiers.
-const baseAmpCuXLPETray={
-  1.5:18,2.5:25,4:34,6:43,10:60,16:80,25:105,35:130,50:155,70:195,
-  95:235,120:270,150:310,185:350,240:415,300:475,400:560,500:640,630:730
+// LV ampacity reference tables per IEC 60364-5-52 installation method (Cu, ambient 30°C air / 20°C ground, 3 loaded conductors), A.
+// tray/air ≈ method C ; conduit/trunking ≈ method B1 ; buried ≈ method D. Al via material modifier; Kt/Kg user-applied.
+// Values 400–630 mm² are extrapolated (out of standard-table range) and are reference-grade only.
+const ampXLPE={
+  C:{1.5:22,2.5:30,4:40,6:51,10:70,16:94,25:119,35:148,50:180,70:232,95:282,120:328,150:379,185:434,240:514,300:593,400:690,500:785,630:895},
+  B1:{1.5:18.5,2.5:25,4:34,6:43,10:60,16:80,25:101,35:126,50:153,70:196,95:238,120:276,150:319,185:364,240:430,300:497,400:576,500:656,630:749},
+  D:{1.5:22,2.5:29,4:38,6:47,10:63,16:81,25:104,35:125,50:148,70:183,95:216,120:246,150:278,185:312,240:361,300:408,400:459,500:511,630:566}
 };
+const ampPVC={
+  C:{1.5:17.5,2.5:24,4:32,6:41,10:57,16:76,25:96,35:119,50:144,70:184,95:223,120:259,150:299,185:341,240:403,300:464,400:539,500:614,630:700},
+  B1:{1.5:15.5,2.5:21,4:28,6:36,10:50,16:68,25:89,35:110,50:134,70:171,95:207,120:239,150:262,185:296,240:346,300:394,400:456,500:520,630:593},
+  D:{1.5:18,2.5:24,4:31,6:39,10:52,16:67,25:86,35:103,50:122,70:151,95:179,120:203,150:230,185:258,240:297,300:336,400:378,500:420,630:464}
+};
+// LV reactance per conductor size (Ω/km), multicore/typical LV
+const X_LV={1.5:0.115,2.5:0.110,4:0.107,6:0.100,10:0.094,16:0.090,25:0.086,35:0.083,50:0.083,70:0.082,95:0.082,120:0.080,150:0.080,185:0.080,240:0.079,300:0.079,400:0.080,500:0.081,630:0.083};
+function reactanceLV(size){return (X_LV[size]||0.08)/1000;} // Ω/m
+function installMethod(){const ins=el('install').value; return ins==='conduit'?'B1':ins==='buried'?'D':'C';}
+
 const cbRatings=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,225,250,315,350,400,500,630,800,1000,1250,1600];
 const cbFrames=[32,63,100,125,160,250,400,630,800,1000,1250,1600,2000,2500,3200];
 const icuRatings=[6,10,15,18,25,36,50,70,85,100,120,150];
@@ -441,13 +496,19 @@ function scMinimumSizePerRun(par){
   if(!(ika>0) || !(t>0)) return 0;
   return (ika*1000/par)*Math.sqrt(t)/kAdiabatic();
 }
+// Protective device coordination per IEC 60364-4-43: Ib ≤ In ≤ Iz and I2 ≤ 1.45·Iz.
+// For standard breakers I2 = 1.45·In, so I2 ≤ 1.45·Iz is met automatically once In ≤ Iz.
 function cbSuggestion(designI,totalAmp){
-  let at=cbRatings.find(x=>x>=designI && x<=totalAmp);
-  if(!at) at=cbRatings.find(x=>x>=designI);
-  if(!at) return {text:'>1600 A — cần thiết kế riêng',at:null,af:null};
-  let af=cbFrames.find(x=>x>=at) || cbFrames[cbFrames.length-1];
-  let suffix=at<=totalAmp?'':' — kiểm tra lại ampacity';
-  return {text:`${at} AT / ${af} AF${suffix}`,at,af};
+  const Iz=totalAmp;
+  let at=cbRatings.find(x=>x>=designI && x<=Iz);
+  if(at){
+    const af=cbFrames.find(x=>x>=at)||cbFrames[cbFrames.length-1];
+    return {text:`${at} AT / ${af} AF · Ib ≤ In ≤ Iz ✓`,at,af,ok:true};
+  }
+  let next=cbRatings.find(x=>x>=designI);
+  if(!next) return {text:'> 1600 A — cần thiết kế riêng',at:null,af:null,ok:false};
+  const af=cbFrames.find(x=>x>=next)||cbFrames[cbFrames.length-1];
+  return {text:`${next} AT / ${af} AF · In > Iz (${fmt(Iz,0)} A) — tăng tiết diện/số tuyến`,at:next,af,ok:false};
 }
 function startMultiplier(){ return el('loadType').value==='motor' ? num('startMult',6) : 1; }
 
@@ -468,29 +529,24 @@ function loadCurrent(){
   return p/(v*etaFactor);
 }
 function ampacityBase(size){
-  let a=baseAmpCuXLPETray[size] || 0;
-  if(el('material').value==='al') a*=0.78;
-  if(el('insulation').value==='pvc') a*=0.86;
-  let ins=el('install').value;
-  if(ins==='conduit') a*=0.82;
-  if(ins==='buried') a*=0.90;
+  const tbl=(el('insulation').value==='pvc')?ampPVC:ampXLPE;
+  let a=(tbl[installMethod()]||{})[size]||0;
+  if(el('material').value==='al') a*=0.78; // Al conductor approximate factor
   let loaded=+el('loaded').value;
-  // Thermal correction is based on loaded conductors, not simply physical core count.
+  // Tables are for 3 loaded conductors; adjust for number of loaded conductors (approximate).
   // PE is normally not a loaded conductor. Neutral treatment depends on actual load/harmonics.
-  if(loaded===2) a*=1.05;
+  if(loaded===2) a*=1.08;
   else if(loaded===3) a*=1.00;
-  else if(loaded>=4) a*=0.90;
+  else if(loaded>=4) a*=0.88;
   return a;
 }
-function resistance20(size){
-  // ohm/km approximation from resistivity; conservative factor accounts for stranded construction
-  const rho=el('material').value==='cu'?0.0175:0.0282;
-  return rho*1000/size*1.03;
-}
+function operatingTemp(){ return el('insulation').value==='xlpe'?90:70; }
+function resistance20(size){ return r20Lookup(el('material').value,size); } // Ω/km @20°C, IEC 60228
+function resistanceOp(size){ return resistance20(size)*tempFactor(el('material').value,operatingTemp()); } // Ω/km at operating temp
 function voltageDrop(size, currentPerCable){
   let L=num('length'), V=num('voltage'), ph=el('phase').value, pf=num('pf',1);
-  let R=resistance20(size)/1000 * 1.20; // operating-temp approximation
-  let X=0.00008; // ohm/m typical LV approximation
+  let R=resistanceOp(size)/1000; // Ω/m at operating temperature (IEC 60228 + temp factor)
+  let X=reactanceLV(size);       // Ω/m size-dependent reactance
   let sin=Math.sqrt(Math.max(0,1-pf*pf));
   let z=R*pf+X*sin;
   let dv = ph==='3' ? Math.sqrt(3)*currentPerCable*L*z : 2*currentPerCable*L*z;
@@ -658,9 +714,10 @@ function calcLV(){
   if(!(massPerM>0)) massPerM=estimatedCableMass(s,cores,od);
   let totalMass=massPerM*length*par;
   let R=resistance20(s);
+  let Rop=resistanceOp(s);
   let loss;
   let activeConductors=el('phase').value==='3'?3:2;
-  loss=selected.Iper*selected.Iper*(R/1000*length)*activeConductors*par;
+  loss=selected.Iper*selected.Iper*(Rop/1000*length)*activeConductors*par;
   let density=selected.Iper/s;
   let trayArea=Math.PI*od*od/4*par;
   let loaded=+el('loaded').value;
@@ -690,7 +747,7 @@ function calcLV(){
   el('rWeight').textContent=fmt(totalMass,1)+' kg';
   el('sumConfig').textContent=config;
   el('sumDensity').textContent=fmt(density,2)+' A/mm²';
-  el('sumR').textContent=fmt(R,3)+' Ω/km @20°C approx.';
+  el('sumR').textContent=fmt(R,3)+' Ω/km @20°C (IEC 60228)';
   el('sumLoss').textContent=fmt(loss/1000,2)+' kW';
   el('sumTray').textContent=fmt(trayArea,0)+' mm² (circular footprint)';
   const cb=cbSuggestion(designI,selected.amp*par);
@@ -742,13 +799,25 @@ function renderCompare(sel,designI){
   });
   el('compareBody').innerHTML=rows;
 }
-function resetApp(){location.reload()}
-document.querySelectorAll('input,select').forEach(x=>x.addEventListener('change',calc));
-el('autoParallel').addEventListener('change',()=>{el('parallel').disabled=el('autoParallel').checked;calc();});
+const STORE_KEY='cableSelectorV6';
+function saveState(){
+  try{ const d={}; document.querySelectorAll('input,select').forEach(x=>{ if(!x.id) return; d[x.id]=(x.type==='checkbox')?x.checked:x.value; }); localStorage.setItem(STORE_KEY,JSON.stringify(d)); }catch(e){}
+}
+function restoreState(){
+  try{ const raw=localStorage.getItem(STORE_KEY); if(!raw) return; const d=JSON.parse(raw);
+    Object.keys(d).forEach(id=>{ const x=el(id); if(!x) return; if(x.type==='checkbox') x.checked=d[id]; else x.value=d[id]; }); }catch(e){}
+}
+function resetApp(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} location.reload(); }
+
+document.querySelectorAll('input,select').forEach(x=>x.addEventListener('change',()=>{saveState();calc();}));
+el('autoParallel').addEventListener('change',()=>{el('parallel').disabled=el('autoParallel').checked;saveState();calc();});
 el('parallel').disabled=true;
+restoreState();
 syncLoadType();
 syncLoaded();
 syncStartMethod();
+el('parallel').disabled=el('autoParallel').checked;
+calc();
 </script>
 
 <script>
