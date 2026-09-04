@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cable-selector-v6-22kv-1';
+const CACHE_NAME = 'cable-selector-v6-22kv-2';
 const ASSETS = [
   './',
   './index.html',
